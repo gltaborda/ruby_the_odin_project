@@ -1,4 +1,7 @@
 LETTERS_ARRAY = ["X", "a", "b", "c", "d", "e", "f", "g", "h"]
+ROOK_MOVES = [[1, 0], [0, 1], [-1, 0], [0, -1]]
+KNIGHT_MOVES = [[2, 1], [1, 2], [-2, 1], [1, -2], [2, -1], [-1, 2], [-2, -1], [-1, -2]]
+BISHOP_MOVES = [[1, 1], [1, -1], [-1, 1], [-1, -1]]
 
 class Piece
   attr_reader :image, :moves, :current_position
@@ -12,7 +15,7 @@ end
 class King < Piece
   def initialize(image, row, column)
     super(image, row, column)
-    @moves = [[1, 0], [0, 1], [-1, 0], [0, -1], [1, 1], [1, -1], [-1, 1], [-1, -1]]
+    @moves = ROOK_MOVES + BISHOP_MOVES
     @moved = false
   end
 end
@@ -20,14 +23,14 @@ end
 class Queen < Piece
   def initialize(image, row, column)
     super(image, row, column)
-    @moves = [[1, 0], [0, 1], [-1, 0], [0, -1], [1, 1], [1, -1], [-1, 1], [-1, -1]]
+    @moves = ROOK_MOVES + BISHOP_MOVES
   end
 end
 
 class Rook < Piece
   def initialize(image, row, column)
     super(image, row, column)
-    @moves = [[1, 0], [0, 1], [-1, 0], [0, -1]]
+    @moves = ROOK_MOVES
     @moved = false
   end
 end
@@ -35,14 +38,14 @@ end
 class Knight < Piece
   def initialize(image, row, column)
     super(image, row, column)
-    @moves = [[2, 1], [1, 2], [-2, 1], [1, -2], [2, -1], [-1, 2], [-2, -1], [-1, -2]]
+    @moves = KNIGHT_MOVES
   end
 end
 
 class Bishop < Piece
   def initialize(image, row, column)
     super(image, row, column)
-    @moves = [[1, 1], [1, -1], [-1, 1], [-1, -1]]
+    @moves = BISHOP_MOVES
   end
 end
 
