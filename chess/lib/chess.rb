@@ -1,14 +1,26 @@
-LETTERS_ARRAY = ["X", "a", "b", "c", "d", "e", "f", "g", "h"]
+LETTERS_ARRAY = ["", "a", "b", "c", "d", "e", "f", "g", "h"]
 ROOK_MOVES = [[1, 0], [0, 1], [-1, 0], [0, -1]]
 KNIGHT_MOVES = [[2, 1], [1, 2], [-2, 1], [1, -2], [2, -1], [-1, 2], [-2, -1], [-1, -2]]
 BISHOP_MOVES = [[1, 1], [1, -1], [-1, 1], [-1, -1]]
+LONG_RANGE = (-7..7)
+SHORT_RANGE = 1
+
 
 class Piece
-  attr_reader :image, :moves, :current_position
+  attr_reader :image, :moves, :range
+  attr_accessor :current_position
   def initialize(image, row, column)
     @image = image
     @moves = []
     @current_position = [row, column]
+  end
+  def valid_move?(new_row, new_column)
+    difference = [new_row - current_position[0], new_column - current_position[1]]
+    if moves.include?(difference)
+      true
+    else
+      false
+    end
   end
 end
 
@@ -24,6 +36,22 @@ class Queen < Piece
   def initialize(image, row, column)
     super(image, row, column)
     @moves = ROOK_MOVES + BISHOP_MOVES
+    @range = LONG_RANGE
+  end
+  def valid_move?(new_row, new_column)
+    found = false
+    looked_for = [new_row, new_column]
+    for i in range
+      aux = moves.collect {|x| x.collect {|y| y * i}  }
+      for j in (0..moves.size - 1)
+        if looked_for == aux[j]
+          found = true
+        end
+        break if found
+      end
+      break if found
+    end
+    found
   end
 end
 
@@ -32,6 +60,7 @@ class Rook < Piece
     super(image, row, column)
     @moves = ROOK_MOVES
     @moved = false
+    @range = LONG_RANGE
   end
 end
 
@@ -46,6 +75,7 @@ class Bishop < Piece
   def initialize(image, row, column)
     super(image, row, column)
     @moves = BISHOP_MOVES
+    @range = LONG_RANGE
   end
 end
 
@@ -57,7 +87,7 @@ class Pawn < Piece
   end
 end
 
-class Empty_piece
+class Empty_space
   attr_reader :image
   def initialize(image)
     @image = image
@@ -70,9 +100,9 @@ class Board
 
   def initialize
     #@empty_piece = Empty_piece.new("_") instead of all positions being objects they can reference the same object
-    @matrix = [Array.new(9,Empty_piece.new("_")), Array.new(9,Empty_piece.new("_")), Array.new(9,Empty_piece.new("_")),
-               Array.new(9,Empty_piece.new("_")), Array.new(9,Empty_piece.new("_")), Array.new(9,Empty_piece.new("_")),
-               Array.new(9,Empty_piece.new("_")), Array.new(9,Empty_piece.new("_")), Array.new(9,Empty_piece.new("_"))]
+    @matrix = [Array.new(9,Empty_space.new("_")), Array.new(9,Empty_space.new("_")), Array.new(9,Empty_space.new("_")),
+               Array.new(9,Empty_space.new("_")), Array.new(9,Empty_space.new("_")), Array.new(9,Empty_space.new("_")),
+               Array.new(9,Empty_space.new("_")), Array.new(9,Empty_space.new("_")), Array.new(9,Empty_space.new("_"))]
   end
 
   def display
@@ -148,12 +178,40 @@ class Board
       end
     end
   end
-  
 
+  def move_piece(array)
+    row = array[0]
+    column = array[1]
+    new_row = array[2]
+    new_column = array[3]
+    if matrix[new_row][new_column].class == Empty_space
+      aux = matrix[row][column]
+      matrix[row][column] = matrix[new_row][new_column]
+      matrix[new_row][new_column] = aux
+    else
+
+    end
+  end
 end
+
+# this method goes in player, need to get strings from from[0] and to[0]
+
+def move_from_to
+  print "Enter the position of the piece you want to move (ex: a3, b7, etc): "
+  from = gets.chomp
+  print "Enter the position where you want to move the piece to (ex: a3, b7, etc): "
+  to = gets.chomp
+  [from[0].to_i,from[1].to_i,to[0].to_i,to[1].to_i]
+end
+
+
+queen = Queen.new("♔", 1, 1)
+puts queen.valid_move?(3,4)
 
 board = Board.new
 board.load
+board.display
+board.move_piece(move_from_to)
 board.display
 for i in (1..8) 
   p board.matrix[8][i].image
@@ -161,3 +219,33 @@ for i in (1..8)
   p board.matrix[8][i].current_position
 end
 puts board.matrix[4][8].image
+
+# how to kinda check valid moves, first would be the difference between
+# the desired position and the actual, second would be the piece's moves
+# or multiplying the array elements and checking with the difference
+
+=begin
+
+range = (-7..7)
+
+found = false
+for i in range
+  puts i
+  aux = KNIGHT_MOVES.collect {|x| x.collect {|y| y * i}  }
+  for j in (0..second.size - 1)
+    if first == aux[j]
+      puts true
+      found = true
+    else
+      puts false
+    end
+    break if found
+  end
+  break if found
+end
+
+=end
+
+
+# check when moving a piece so it doesn't 'eat' a piece of the same color
+# maybe comparing colors
