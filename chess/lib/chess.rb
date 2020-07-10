@@ -2,8 +2,29 @@ LETTERS_ARRAY = ["", "a", "b", "c", "d", "e", "f", "g", "h"]
 ROOK_MOVES = [[1, 0], [0, 1], [-1, 0], [0, -1]]
 KNIGHT_MOVES = [[2, 1], [1, 2], [-2, 1], [1, -2], [2, -1], [-1, 2], [-2, -1], [-1, -2]]
 BISHOP_MOVES = [[1, 1], [1, -1], [-1, 1], [-1, -1]]
-LONG_RANGE = (-7..7)
+LONG_RANGE = (1..7)
 SHORT_RANGE = 1
+
+module Moveable
+  def valid_move?(new_row, new_column)
+    found = false
+    p difference = [new_row - current_position[0], new_column - current_position[1]]
+    for i in range
+      puts i
+      aux = moves.collect {|x| x.collect {|y| y * i}  }
+      p aux
+      for j in (0..moves.size - 1)
+        if difference == aux[j]
+          found = true
+          puts true
+        end
+        break if found
+      end
+      break if found
+    end
+    found
+  end
+end
 
 
 class Piece
@@ -33,29 +54,17 @@ class King < Piece
 end
 
 class Queen < Piece
+  include Moveable
   def initialize(image, row, column)
     super(image, row, column)
-    @moves = ROOK_MOVES + BISHOP_MOVES
+    @moves = ROOK_MOVES + BISHOP_MOVES 
     @range = LONG_RANGE
   end
-  def valid_move?(new_row, new_column)
-    found = false
-    looked_for = [new_row, new_column]
-    for i in range
-      aux = moves.collect {|x| x.collect {|y| y * i}  }
-      for j in (0..moves.size - 1)
-        if looked_for == aux[j]
-          found = true
-        end
-        break if found
-      end
-      break if found
-    end
-    found
-  end
+  
 end
 
 class Rook < Piece
+  include Moveable
   def initialize(image, row, column)
     super(image, row, column)
     @moves = ROOK_MOVES
@@ -72,6 +81,7 @@ class Knight < Piece
 end
 
 class Bishop < Piece
+  include Moveable
   def initialize(image, row, column)
     super(image, row, column)
     @moves = BISHOP_MOVES
@@ -206,7 +216,7 @@ end
 
 
 queen = Queen.new("♔", 1, 1)
-puts queen.valid_move?(3,4)
+puts queen.valid_move?(2, 1)
 
 board = Board.new
 board.load
