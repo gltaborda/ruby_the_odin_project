@@ -7,47 +7,54 @@ SHORT_RANGE = 1
 
 module Moveable
   def valid_move?(new_row, new_column)
+    move = []
+    times = 0
     found = false
-    p difference = [new_row - current_position[0], new_column - current_position[1]]
+    difference = [new_row - current_position[0], new_column - current_position[1]]
     for i in range
-      puts i
       aux = moves.collect {|x| x.collect {|y| y * i}  }
-      p aux
       for j in (0..moves.size - 1)
         if difference == aux[j]
           found = true
-          puts true
+          move = moves[j]
+          times = i
         end
         break if found
       end
       break if found
     end
-    found
+    [move, times]
   end
 end
 
 
 class Piece
-  attr_reader :image, :moves, :range
+  attr_reader :image, :moves, :range, :color
   attr_accessor :current_position
-  def initialize(image, row, column)
+  def initialize(image, row, column, color)
     @image = image
     @moves = []
     @current_position = [row, column]
+    @color = color
   end
   def valid_move?(new_row, new_column)
     difference = [new_row - current_position[0], new_column - current_position[1]]
-    if moves.include?(difference)
-      true
-    else
-      false
+    move = []
+    found = false
+    moves.each do |current_move|
+      if current_move == difference
+        move = current_move
+        found = true
+      end
+    break if found
     end
+    [move, 1]
   end
 end
 
 class King < Piece
-  def initialize(image, row, column)
-    super(image, row, column)
+  def initialize(image, row, column, color)
+    super(image, row, column, color)
     @moves = ROOK_MOVES + BISHOP_MOVES
     @moved = false
   end
@@ -55,8 +62,8 @@ end
 
 class Queen < Piece
   include Moveable
-  def initialize(image, row, column)
-    super(image, row, column)
+  def initialize(image, row, column, color)
+    super(image, row, column, color)
     @moves = ROOK_MOVES + BISHOP_MOVES 
     @range = LONG_RANGE
   end
@@ -65,8 +72,8 @@ end
 
 class Rook < Piece
   include Moveable
-  def initialize(image, row, column)
-    super(image, row, column)
+  def initialize(image, row, column, color)
+    super(image, row, column, color)
     @moves = ROOK_MOVES
     @moved = false
     @range = LONG_RANGE
@@ -74,33 +81,34 @@ class Rook < Piece
 end
 
 class Knight < Piece
-  def initialize(image, row, column)
-    super(image, row, column)
+  def initialize(image, row, column, color)
+    super(image, row, column, color)
     @moves = KNIGHT_MOVES
   end
 end
 
 class Bishop < Piece
   include Moveable
-  def initialize(image, row, column)
-    super(image, row, column)
+  def initialize(image, row, column, color)
+    super(image, row, column, color)
     @moves = BISHOP_MOVES
     @range = LONG_RANGE
   end
 end
 
 class Pawn < Piece
-  def initialize(image, pass, row, column)
-    super(image, row, column)
+  def initialize(image, pass, row, column, color)
+    super(image, row, column, color)
     @moves = [[pass, 0]]
     @moved = false
   end
 end
 
 class Empty_space
-  attr_reader :image
+  attr_reader :image, :color
   def initialize(image)
     @image = image
+    @color = ""
   end
   
 end
@@ -129,23 +137,23 @@ class Board
   
   def load_pieces(row, index, color)
     if color == "white"
-      row[1] = Rook.new("♖", index, 1)
-      row[2] = Knight.new("♘", index, 2)
-      row[3] = Bishop.new("♗", index, 3)
-      row[4] = Queen.new("♕", index, 4)
-      row[5] = King.new("♔", index, 5)
-      row[6] = Bishop.new("♗", index, 6)
-      row[7] = Knight.new("♘", index, 7)
-      row[8] = Rook.new("♖", index, 8)
+      row[1] = Rook.new("♖", index, 1, color)
+      row[2] = Knight.new("♘", index, 2, color)
+      row[3] = Bishop.new("♗", index, 3, color)
+      row[4] = Queen.new("♕", index, 4, color)
+      row[5] = King.new("♔", index, 5, color)
+      row[6] = Bishop.new("♗", index, 6, color)
+      row[7] = Knight.new("♘", index, 7, color)
+      row[8] = Rook.new("♖", index, 8, color)
     else
-      row[1] = Rook.new("♜", index, 1)
-      row[2] = Knight.new("♞", index, 2)
-      row[3] = Bishop.new("♝", index, 3)
-      row[4] = Queen.new("♛", index, 4)
-      row[5] = King.new("♚", index, 5)
-      row[6] = Bishop.new("♝", index, 6)
-      row[7] = Knight.new("♞", index, 7)
-      row[8] = Rook.new("♜", index, 8)
+      row[1] = Rook.new("♜", index, 1, color)
+      row[2] = Knight.new("♞", index, 2, color)
+      row[3] = Bishop.new("♝", index, 3, color)
+      row[4] = Queen.new("♛", index, 4, color)
+      row[5] = King.new("♚", index, 5, color)
+      row[6] = Bishop.new("♝", index, 6, color)
+      row[7] = Knight.new("♞", index, 7, color)
+      row[8] = Rook.new("♜", index, 8, color)
     end
   end
 
@@ -158,7 +166,7 @@ class Board
       pass = -1
     end
     for i in (1..8)
-      row [i] = Pawn.new(image, pass, index, i)
+      row [i] = Pawn.new(image, pass, index, i, color)
     end
     
   end
@@ -190,72 +198,112 @@ class Board
   end
 
   def move_piece(array)
-    row = array[0]
-    column = array[1]
-    new_row = array[2]
-    new_column = array[3]
-    if matrix[new_row][new_column].class == Empty_space
-      aux = matrix[row][column]
-      matrix[row][column] = matrix[new_row][new_column]
-      matrix[new_row][new_column] = aux
-    else
-
+    column = array[0]
+    row = array[1]
+    new_column = array[2]
+    new_row = array[3]
+    check_move = matrix[row][column].valid_move?(new_row, new_column)
+    unless check_move[0].empty?
+      path = make_path([row, column], check_move)
+      if free_path?(matrix[row][column], path)
+        if matrix[new_row][new_column].class == Empty_space
+          aux = matrix[row][column]
+          matrix[row][column] = matrix[new_row][new_column]
+          matrix[new_row][new_column] = aux
+          matrix[new_row][new_column].current_position = [new_row, new_column]
+        else
+          matrix[new_row][new_column] = matrix[row][column]
+          matrix[new_row][new_column].current_position = [new_row, new_column]
+          matrix[row][column] = Empty_space.new("_")
+        end
+      end
     end
   end
+
+  def make_path(origin, move)
+    path = []
+    ending_condition = move[1]
+    for i in (1..ending_condition)
+      aux = [origin[0] + i * move[0][0], origin[1] + i * move[0][1]]
+      path.push(aux)
+    end
+    path
+  end
+
+  def free_path?(origin, path)
+    free_path = true
+    destiny = matrix[path[path.size - 1][0]][path[path.size - 1][1]]
+    path.each_with_index do |position, index|  
+      if (index != path.size - 1) && (matrix[position[0]][position[1]].class != Empty_space)
+        free_path = false
+        p "ni en pedo se mueve gato"
+      end
+      if origin.color == destiny.color
+        free_path = false
+      end
+    end
+    free_path
+  end
+
 end
 
 # this method goes in player, need to get strings from from[0] and to[0]
 
+def read_letters_array(letter)
+  index = 0
+  LETTERS_ARRAY.each_with_index do |current_letter, current_index|
+    index = current_index if current_letter == letter
+  end
+  index
+end
+
 def move_from_to
-  print "Enter the position of the piece you want to move (ex: a3, b7, etc): "
-  from = gets.chomp
-  print "Enter the position where you want to move the piece to (ex: a3, b7, etc): "
-  to = gets.chomp
-  [from[0].to_i,from[1].to_i,to[0].to_i,to[1].to_i]
+    print "Enter the position of the piece you want to move (ex: a3, b7, etc): "
+    from = gets.chomp
+    print "Enter the position where you want to move the piece to (ex: a3, b7, etc): "
+    to = gets.chomp
+    from_letter = read_letters_array(from[0])
+    to_letter = read_letters_array(to[0])
+    [from_letter, from[1].to_i, to_letter, to[1].to_i]
 end
 
 
-queen = Queen.new("♔", 1, 1)
-puts queen.valid_move?(2, 1)
+
+
+=begin
+board = Board.new
+
+queen = Queen.new("♔", 6, 6, "white")
+board.display
+p path = board.make_path(queen.current_position,queen.valid_move?(2, 2))
+puts board.free_path?(path)
+=end
+
+p read_letters_array("e")
 
 board = Board.new
+
 board.load
 board.display
 board.move_piece(move_from_to)
 board.display
-for i in (1..8) 
-  p board.matrix[8][i].image
-  p board.matrix[8][i].moves
-  p board.matrix[8][i].current_position
-end
-puts board.matrix[4][8].image
+p board.matrix[3][3].image
+board.move_piece(move_from_to)
+board.display
+board.move_piece(move_from_to)
+board.display
+board.move_piece(move_from_to)
+board.display
+board.move_piece(move_from_to)
+board.display
 
-# how to kinda check valid moves, first would be the difference between
-# the desired position and the actual, second would be the piece's moves
-# or multiplying the array elements and checking with the difference
 
 =begin
-
-range = (-7..7)
-
-found = false
-for i in range
-  puts i
-  aux = KNIGHT_MOVES.collect {|x| x.collect {|y| y * i}  }
-  for j in (0..second.size - 1)
-    if first == aux[j]
-      puts true
-      found = true
-    else
-      puts false
-    end
-    break if found
-  end
-  break if found
-end
+to-do
+-link players with pieces or at least the king
+-check for check and checkmate
+-build the flow of the turns (easy)
 
 =end
 
 
-# check when moving a piece so it doesn't 'eat' a piece of the same color
-# maybe comparing colors
